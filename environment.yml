@@ -1,0 +1,22 @@
+name: torch-rl
+
+dependencies:
+  - python=3.10
+  - numpy
+  - matplotlib
+  - pandas
+  - pip
+  - ipykernel
+  - pip:
+    - brax
+    - mujoco
+    - mujoco-mjx
+    - dm_control
+    #- torchrl
+    # use our modified torchrl fork
+    - git+https://github.com/scott-yj-yang/rl.git
+
+# Still need to use the following code to enable JAX on CUDA 
+
+# pip install -U "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+# pip install -U numba
