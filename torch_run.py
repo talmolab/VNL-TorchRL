@@ -5,7 +5,7 @@ from Rodent_Env_Brax import Rodent
 import uuid
 import os
 import yaml
-#import hydra
+import hydra
 from torchrl._utils import logger as torchrl_logger
 
 import warnings
@@ -40,8 +40,8 @@ config = {
     "ls_iterations": 4,
 }
 
-#@hydra.main(config_path="", config_name="config_mujoco", version_base="1.1")
-def main(cfg: "config_torch"):  # noqa: F821
+@hydra.main(config_path="", config_name="config_torch", version_base="1.1")
+def main(cfg: "DictConfig"):  # noqa: F821
 
     import time
     import torch.optim
@@ -273,7 +273,4 @@ def main(cfg: "config_torch"):  # noqa: F821
     print(f"Run finished. Model saved to {final_save_path}")
 
 if __name__ == "__main__":
-    with open('config_torch.yaml', 'r') as file:
-        config_data = yaml.safe_load(file)
-    
-    main(config_data)
+    main()
