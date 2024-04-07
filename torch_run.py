@@ -267,4 +267,4 @@ def main(cfg: "DictConfig"):  # noqa: F821
     print(f"Run finished. Model saved to {final_save_path}")
 
 if __name__ == "__main__":
-    main()
+    main('config_torch.yaml')
