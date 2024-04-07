@@ -13,7 +13,9 @@ dependencies:
     - mujoco-mjx
     - dm_control
     #\- torchrl
-    - git+https://github.com/scott-yj-yang/rl.git  # use our modified torchrl fork
+    #- git+https://github.com/scott-yj-yang/rl.git  # use our modified torchrl fork
+    - git+https://github.com/KevinBian107/torch_rl_vnl.git # use our modified torchrl fork, change torchrl directly
+    - hydra-core --upgrade
 
 # Still need to use the following code to enable JAX on CUDA 
 # pip install -U "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
