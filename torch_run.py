@@ -40,7 +40,7 @@ config = {
 }
 
 #@hydra.main(config_path="", config_name="config_mujoco", version_base="1.1")
-def main(cfg: "config_torch.yaml"):  # noqa: F821
+def main(cfg: "config_torch"):  # noqa: F821
 
     import time
     import torch.optim
@@ -272,4 +272,4 @@ def main(cfg: "config_torch.yaml"):  # noqa: F821
     print(f"Run finished. Model saved to {final_save_path}")
 
 if __name__ == "__main__":
-    main('config_torch.yaml')
+    main('config_torch')
