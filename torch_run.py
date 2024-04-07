@@ -20,7 +20,7 @@ os.environ['XLA_FLAGS'] = (
     '--xla_gpu_enable_highest_priority_async_stream=true '
 )
 
-n_gpus = jax.device_count(backend="gpu")
+n_gpus = 1 #jax.device_count(backend="gpu")
 print(f"Using {n_gpus} GPUs")
 
 config = {
