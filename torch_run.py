@@ -4,6 +4,7 @@ import wandb
 from Rodent_Env_Brax import Rodent
 import uuid
 import os
+import yaml
 #import hydra
 from torchrl._utils import logger as torchrl_logger
 
@@ -126,7 +127,7 @@ def main(cfg: "config_torch"):  # noqa: F821
         )
 
     # Create test environment
-    test_env = make_env(cfg.env.env_name, device)
+    test_env = make_base_env(cfg.env.env_name, device)
     test_env.eval()
 
     # Main loop parameter
@@ -272,4 +273,7 @@ def main(cfg: "config_torch"):  # noqa: F821
     print(f"Run finished. Model saved to {final_save_path}")
 
 if __name__ == "__main__":
-    main('config_torch')
+    with open('config_torch.yaml', 'r') as file:
+        config_data = yaml.safe_load(file)
+    
+    main(config_data)
