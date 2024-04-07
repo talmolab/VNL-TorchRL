@@ -1,16 +1,14 @@
 import jax
-
 import torchrl
-
 import wandb
-
 from Rodent_Env_Brax import Rodent
-
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 import uuid
 import os
+#import hydra
+from torchrl._utils import logger as torchrl_logger
 
 os.environ['XLA_FLAGS'] = (
     '--xla_gpu_enable_triton_softmax_fusion=true '
@@ -40,13 +38,7 @@ config = {
     "ls_iterations": 4,
 }
 
-
-
-import hydra
-from torchrl._utils import logger as torchrl_logger
-
-
-@hydra.main(config_path="", config_name="config_mujoco", version_base="1.1")
+#@hydra.main(config_path="", config_name="config_mujoco", version_base="1.1")
 def main(cfg: "DictConfig"):  # noqa: F821
 
     import time
