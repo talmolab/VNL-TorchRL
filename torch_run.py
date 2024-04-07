@@ -42,42 +42,6 @@ config = {
 
 
 
-
-# Generates a completely random UUID (version 4)
-run_id = uuid.uuid4()
-model_path = f"./model_checkpoints/{run_id}"
-
-run = wandb.init(
-    project="vnl_debug",
-    config=config,
-    notes=f"{config['batch_size']} batchsize, " + 
-        f"{config['solver']}, {config['iterations']}/{config['ls_iterations']}"
-)
-
-
-wandb.run.name = f"{config['env_name']}_{config['task_name']}_{config['algo_name']}_{config['run_platform']}"
-
-
-def wandb_progress(num_steps, metrics):
-    metrics["num_steps"] = num_steps
-    wandb.log(metrics)
-    print(metrics)
-    
-def policy_params_fn(num_steps, make_policy, params, model_path=model_path):
-    os.makedirs(model_path, exist_ok=True)
-    model.save_params(f"{model_path}/{num_steps}", params)
-    
-
-make_inference_fn, params, _ = train_fn(environment=env, progress_fn=wandb_progress, policy_params_fn=policy_params_fn)
-
-final_save_path = f"{model_path}/brax_ppo_rodent_run_finished"
-model.save_params(final_save_path, params)
-print(f"Run finished. Model saved to {final_save_path}")
-
-# model is from brax.io import model -- what is the torch way to do this
-
-
-
 import hydra
 from torchrl._utils import logger as torchrl_logger
 
@@ -190,6 +154,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
     cfg_logger_num_test_episodes = cfg.logger.num_test_episodes
     losses = TensorDict({}, batch_size=[cfg_loss_ppo_epochs, num_mini_batches])
 
+    # Main training loop
     for i, data in enumerate(collector):
 
         log_info = {}
@@ -302,6 +267,12 @@ def main(cfg: "DictConfig"):  # noqa: F821
     execution_time = end_time - start_time
     torchrl_logger.info(f"Training took {execution_time:.2f} seconds to finish")
 
+    # Generates a completely random UUID (version 4)
+    run_id = uuid.uuid4()
+    PATH = f"./model_checkpoints/{run_id}"
+    final_save_path = f"{PATH}/torchrl_ppo_finished"
+    torch.save(actor.state_dict(), PATH)
+    print(f"Run finished. Model saved to {final_save_path}")
 
 if __name__ == "__main__":
     main()
