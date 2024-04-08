@@ -74,7 +74,7 @@ class Rodent(PipelineEnv):
     )
     self._vision = vision
     
-  def reset(self, rng) -> State:
+  def reset(self, rng=jax.random.PRNGKey(0)) -> State:
     """Resets the environment to an initial state."""
     rng, rng1, rng2 = jax.random.split(rng, 3)
 
