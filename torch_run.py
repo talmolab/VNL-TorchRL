@@ -1,17 +1,18 @@
 import jax
-
 import torchrl
-
 import wandb
+import uuid
+import os
+import yaml
+import hydra
+from torchrl._utils import logger as torchrl_logger
 
 from Rodent_Env_Brax import Rodent
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
-import uuid
-import os
-
+# GPU Setting
 os.environ['XLA_FLAGS'] = (
     '--xla_gpu_enable_triton_softmax_fusion=true '
     '--xla_gpu_triton_gemm_any=True '
@@ -20,7 +21,7 @@ os.environ['XLA_FLAGS'] = (
     '--xla_gpu_enable_highest_priority_async_stream=true '
 )
 
-n_gpus = jax.device_count(backend="gpu")
+n_gpus = 1 #jax.device_count(backend="gpu")
 print(f"Using {n_gpus} GPUs")
 
 config = {
@@ -40,56 +41,12 @@ config = {
     "ls_iterations": 4,
 }
 
-
-
-
-# Generates a completely random UUID (version 4)
-run_id = uuid.uuid4()
-model_path = f"./model_checkpoints/{run_id}"
-
-run = wandb.init(
-    project="vnl_debug",
-    config=config,
-    notes=f"{config['batch_size']} batchsize, " + 
-        f"{config['solver']}, {config['iterations']}/{config['ls_iterations']}"
-)
-
-
-wandb.run.name = f"{config['env_name']}_{config['task_name']}_{config['algo_name']}_{config['run_platform']}"
-
-
-def wandb_progress(num_steps, metrics):
-    metrics["num_steps"] = num_steps
-    wandb.log(metrics)
-    print(metrics)
-    
-def policy_params_fn(num_steps, make_policy, params, model_path=model_path):
-    os.makedirs(model_path, exist_ok=True)
-    model.save_params(f"{model_path}/{num_steps}", params)
-    
-
-make_inference_fn, params, _ = train_fn(environment=env, progress_fn=wandb_progress, policy_params_fn=policy_params_fn)
-
-final_save_path = f"{model_path}/brax_ppo_rodent_run_finished"
-model.save_params(final_save_path, params)
-print(f"Run finished. Model saved to {final_save_path}")
-
-# model is from brax.io import model -- what is the torch way to do this
-
-
-
-import hydra
-from torchrl._utils import logger as torchrl_logger
-
-
-@hydra.main(config_path="", config_name="config_mujoco", version_base="1.1")
+@hydra.main(config_path="", config_name="config_torch", version_base="1.1")
 def main(cfg: "DictConfig"):  # noqa: F821
 
     import time
-
     import torch.optim
     import tqdm
-
     from tensordict import TensorDict
     from torchrl.collectors import SyncDataCollector
     from torchrl.data import LazyMemmapStorage, TensorDictReplayBuffer
@@ -98,10 +55,13 @@ def main(cfg: "DictConfig"):  # noqa: F821
     from torchrl.objectives import ClipPPOLoss
     from torchrl.objectives.value.advantages import GAE
     from torchrl.record.loggers import generate_exp_name, get_logger
-    from utils_mujoco import eval_model, make_env, make_ppo_models
+    
+    from torch_utils import eval_model, make_env, make_ppo_models
 
     device = "cpu" if not torch.cuda.device_count() else "cuda"
+
     num_mini_batches = cfg.collector.frames_per_batch // cfg.loss.mini_batch_size
+
     total_network_updates = (
         (cfg.collector.total_frames // cfg.collector.frames_per_batch)
         * cfg.loss.ppo_epochs
@@ -172,7 +132,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
     test_env = make_env(cfg.env.env_name, device)
     test_env.eval()
 
-    # Main loop
+    # Main loop parameter
     collected_frames = 0
     num_network_updates = 0
     start_time = time.time()
@@ -190,7 +150,9 @@ def main(cfg: "DictConfig"):  # noqa: F821
     cfg_logger_num_test_episodes = cfg.logger.num_test_episodes
     losses = TensorDict({}, batch_size=[cfg_loss_ppo_epochs, num_mini_batches])
 
+    # Main training loop
     for i, data in enumerate(collector):
+        # for each data in the collector
 
         log_info = {}
         sampling_time = time.time() - sampling_start
@@ -212,6 +174,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
 
         training_start = time.time()
         for j in range(cfg_loss_ppo_epochs):
+            # for number of epoch for ppo
 
             # Compute GAE
             with torch.no_grad():
@@ -222,31 +185,32 @@ def main(cfg: "DictConfig"):  # noqa: F821
             data_buffer.extend(data_reshape)
 
             for k, batch in enumerate(data_buffer):
+                # for each data in data buffer
 
                 # Get a data batch
                 batch = batch.to(device)
 
                 # Linearly decrease the learning rate and clip epsilon
                 alpha = 1.0
+                
                 if cfg_optim_anneal_lr:
                     alpha = 1 - (num_network_updates / total_network_updates)
                     for group in actor_optim.param_groups:
                         group["lr"] = cfg_optim_lr * alpha
                     for group in critic_optim.param_groups:
                         group["lr"] = cfg_optim_lr * alpha
+                
                 if cfg_loss_anneal_clip_eps:
                     loss_module.clip_epsilon.copy_(cfg_loss_clip_epsilon * alpha)
                 num_network_updates += 1
 
                 # Forward pass PPO loss
-                loss = loss_module(batch)
-                losses[j, k] = loss.select(
-                    "loss_critic", "loss_entropy", "loss_objective"
-                ).detach()
+                loss = loss_module(batch) # compute GAE error for current batch
+                losses[j, k] = loss.select("loss_critic", "loss_entropy", "loss_objective").detach()
                 critic_loss = loss["loss_critic"]
                 actor_loss = loss["loss_objective"] + loss["loss_entropy"]
 
-                # Backward pass
+                # Backward pass, update in the direction of gradient
                 actor_loss.backward()
                 critic_loss.backward()
 
@@ -259,6 +223,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
         # Get training losses and times
         training_time = time.time() - training_start
         losses_mean = losses.apply(lambda x: x.float().mean(), batch_size=[])
+        
         for key, value in losses_mean.items():
             log_info.update({f"train/{key}": value.item()})
         log_info.update(
@@ -302,6 +267,12 @@ def main(cfg: "DictConfig"):  # noqa: F821
     execution_time = end_time - start_time
     torchrl_logger.info(f"Training took {execution_time:.2f} seconds to finish")
 
+    # Generates a completely random UUID (version 4) for savings
+    run_id = uuid.uuid4()
+    PATH = f"./model_checkpoints/{run_id}"
+    final_save_path = f"{PATH}/torchrl_ppo_finished"
+    torch.save(actor.state_dict(), PATH)
+    print(f"Run finished. Model saved to {final_save_path}")
 
 if __name__ == "__main__":
     main()
