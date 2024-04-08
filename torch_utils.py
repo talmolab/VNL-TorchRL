@@ -37,6 +37,7 @@ from torchrl.modules import (
 )
 
 from torchrl.envs import BraxWrapper
+import brax.envs as brax_envs
 
 from Rodent_Env_Brax import Rodent
 # ====================================================================
@@ -45,7 +46,8 @@ from Rodent_Env_Brax import Rodent
 
 
 def make_env(env_name="Rodent", frame_skip=4, is_test=False):
-    env = BraxWrapper(Rodent, 
+    brax_envs.register_environment("rodent", Rodent)
+    env = BraxWrapper(brax_envs.get_environment("rodent"), 
                       iterations=6,
                       ls_iterations=3)
 
