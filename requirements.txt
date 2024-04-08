@@ -1,0 +1,9 @@
+brax
+mujoco
+mujoco-mjx
+tqdm
+dm_control
+torchrl @ git+https://github.com/scott-yj-yang/rl.git@main
+
+# pip install -U "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+# pip install -U numba
