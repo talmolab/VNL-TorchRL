@@ -55,7 +55,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
     from torchrl.objectives import ClipPPOLoss
     from torchrl.objectives.value.advantages import GAE
     from torchrl.record.loggers import generate_exp_name, get_logger
-    from torch_utils import eval_model, make_base_env, make_ppo_models
+    from torch_utils_mujoco import eval_model, make_env, make_ppo_models
 
     device = "cpu" if not torch.cuda.device_count() else "cuda"
 
@@ -73,7 +73,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
 
     # Create collector
     collector = SyncDataCollector(
-        create_env_fn=make_base_env(cfg.env.env_name, device),
+        create_env_fn=make_env(cfg.env.env_name, device),
         policy=actor,
         frames_per_batch=cfg.collector.frames_per_batch,
         total_frames=cfg.collector.total_frames,
@@ -128,7 +128,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
         )
 
     # Create test environment
-    test_env = make_base_env(cfg.env.env_name, device)
+    test_env = make_env(cfg.env.env_name, device)
     test_env.eval()
 
     # Main loop parameter
