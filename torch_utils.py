@@ -48,9 +48,12 @@ from Rodent_Env_Brax import Rodent
 def make_env(env_name="rodent", frame_skip=4, is_test=False):
     
     brax_envs.register_environment(env_name, Rodent)
+
     env = BraxWrapper(brax_envs.get_environment(env_name), 
                       iterations=6,
                       ls_iterations=3)
+    
+    env.set_seed(0)
 
     env = TransformedEnv(env)
     return env
