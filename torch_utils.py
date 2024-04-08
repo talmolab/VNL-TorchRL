@@ -80,7 +80,7 @@ def make_parallel_env(env_name, num_envs, device, is_test=False):
 def make_ppo_modules_pixels(proof_environment):
 
     # Define input shape
-    input_shape = proof_environment.observation_spec["pixels"].shape
+    input_shape = proof_environment.observation_spec["observations"].shape
 
     # Define distribution class and kwargs
     if isinstance(proof_environment.action_spec.space, DiscreteBox):
@@ -96,7 +96,7 @@ def make_ppo_modules_pixels(proof_environment):
         }
 
     # Define input keys
-    in_keys = ["pixels"]
+    in_keys = ["observations"]
 
     # Define a shared Module and TensorDictModule (CNN + MLP)
     common_cnn = ConvNet(
