@@ -118,7 +118,7 @@ def make_ppo_models_state(proof_environment):
 
 
 def make_ppo_models(env_name):
-    proof_environment = make_env(env_name, device="cpu")
+    proof_environment = make_env(env_name)
     actor, critic = make_ppo_models_state(proof_environment)
     return actor, critic
 
