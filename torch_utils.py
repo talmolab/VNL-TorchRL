@@ -98,28 +98,29 @@ def make_ppo_modules_pixels(proof_environment):
     # Define input keys
     in_keys = ["observation"]
 
-    # Define a shared Module and TensorDictModule (CNN + MLP)
-    common_cnn = ConvNet(
-        activation_class=torch.nn.ReLU,
-        num_cells=[32, 64, 64],
-        kernel_sizes=[8, 4, 3],
-        strides=[4, 2, 1],
-    )
+    # # Define a shared Module and TensorDictModule (CNN + MLP)
+    # common_cnn = ConvNet(
+    #     activation_class=torch.nn.ReLU,
+    #     num_cells=[32, 64, 64],
+    #     kernel_sizes=[8, 4, 3],
+    #     strides=[4, 2, 1],
+    # )
     
-    common_cnn_output = common_cnn(torch.ones(input_shape))
+    # common_cnn_output = common_cnn(torch.ones(input_shape))
     
     common_mlp = MLP(
-        in_features=common_cnn_output.shape[-1],
+        in_features=input_shape, #common_cnn_output.shape[-1],
         activation_class=torch.nn.ReLU,
         activate_last_layer=True,
         out_features=512,
         num_cells=[],
     )
-    common_mlp_output = common_mlp(common_cnn_output)
+    
+    common_mlp_output = common_mlp(torch.ones(input_shape))#(common_cnn_output)
 
     # Define shared net as TensorDictModule
     common_module = TensorDictModule(
-        module=torch.nn.Sequential(common_cnn, common_mlp),
+        module=torch.nn.Sequential(common_mlp),#(common_cnn, common_mlp),
         in_keys=in_keys,
         out_keys=["common_features"],
     )

@@ -156,13 +156,16 @@ class Rodent(PipelineEnv):
                               data)
       img = jax.numpy.array(img).flatten()
       s = jax.numpy.sum(img) * 1e-12
+      #image_jax_noise = img * 1e-12
       
     else:
-      s = 0
+      #image_jax_noise = jax.numpy.array(np.zeros((64,64,3), dtype=np.uint8))
+      s=0
       
     # external_contact_forces are excluded
     return jp.concatenate([
-        data.qpos + s, data.qvel, 
+        #image_jax_noise,
+        data.qpos+s, data.qvel, 
         data.cinert[1:].ravel(),
         data.cvel[1:].ravel(),
         data.qfrc_actuator
