@@ -109,7 +109,7 @@ def make_ppo_modules_pixels(proof_environment):
     # common_cnn_output = common_cnn(torch.ones(input_shape))
     
     common_mlp = MLP(
-        in_features=input_shape, #common_cnn_output.shape[-1],
+        in_features=input_shape[-1], #common_cnn_output.shape[-1],
         activation_class=torch.nn.ReLU,
         activate_last_layer=True,
         out_features=512,
