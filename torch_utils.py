@@ -5,6 +5,7 @@
 
 import torch.nn
 import torch.optim
+from tensordict.nn.distributions import NormalParamExtractor
 from tensordict.nn import TensorDictModule
 from torchrl.data import CompositeSpec
 from torchrl.data.tensor_specs import DiscreteBox
@@ -120,28 +121,34 @@ def make_ppo_modules_pixels(proof_environment):
 
     # Define shared net as TensorDictModule
     common_module = TensorDictModule(
-        module=torch.nn.Sequential(common_mlp),#(common_cnn, common_mlp),
+        module=torch.nn.Sequential(#common_cnn,
+                                   common_mlp,
+                                   ),
         in_keys=in_keys,
         out_keys=["common_features"],
     )
 
     # Define on head for the policy
-    policy_net = MLP(
+    policy_mlp = MLP(
         in_features=common_mlp_output.shape[-1],
         out_features=num_outputs,
         activation_class=torch.nn.ReLU,
         num_cells=[],
     )
+
+    policy_net = torch.nn.Sequential(policy_mlp,
+                                     NormalParamExtractor(),)
+    
     policy_module = TensorDictModule(
         module=policy_net,
         in_keys=["common_features"],
-        out_keys=["logits"],
+        out_keys=["loc", "scale"],
     )
 
     # Add probabilistic sampling of the actions
     policy_module = ProbabilisticActor(
         policy_module,
-        in_keys=["logits"],
+        in_keys=["loc", "scale"],
         spec=CompositeSpec(action=proof_environment.action_spec),
         distribution_class=distribution_class,
         distribution_kwargs=distribution_kwargs,
@@ -178,10 +185,10 @@ def make_ppo_models(env_name):
         value_operator=value_module,
     )
 
-    # with torch.no_grad():
-    #     td = proof_environment.rollout(max_steps=100, break_when_any_done=False)
-    #     td = actor_critic(td)
-    #     del td
+    with torch.no_grad():
+        td = proof_environment.rollout(max_steps=100, break_when_any_done=False)
+        td = actor_critic(td)
+        del td
 
     actor = actor_critic.get_policy_operator()
     critic = actor_critic.get_value_operator()
