@@ -14,6 +14,7 @@ import numpy as np
 import os
 
 _XML_PATH = "./../../../models/rodent_optimized.xml"
+_XML_PATH = "./../../../models/rodent_debug.xml"
 # _XML_PATH = "./models/rodent_optimized.xml"
 
 class Rodent(PipelineEnv):
@@ -24,7 +25,7 @@ class Rodent(PipelineEnv):
       ctrl_cost_weight=0.1,
       healthy_reward=1.0,
       terminate_when_unhealthy=True,
-      healthy_z_range=(0.01, 0.5),
+      healthy_z_range=(0.1, 0.5),
       reset_noise_scale=1e-2,
       exclude_current_positions_from_observation=True,
       solver="cg",
@@ -101,6 +102,7 @@ class Rodent(PipelineEnv):
         'distance_from_origin': zero,
         'x_velocity': zero,
         'y_velocity': zero,
+        'episode_reward': zero,
     }
     return State(data, obs, reward, done, metrics)
 
@@ -116,7 +118,6 @@ class Rodent(PipelineEnv):
 
     min_z, max_z = self._healthy_z_range
     is_healthy = jp.where(data.q[2] < min_z, 0.0, 1.0)
-    is_healthy = jp.where(data.q[2] > max_z, 0.0, is_healthy)
     if self._terminate_when_unhealthy:
       healthy_reward = self._healthy_reward
     else:
@@ -137,6 +138,8 @@ class Rodent(PipelineEnv):
         distance_from_origin=jp.linalg.norm(com_after),
         x_velocity=velocity[0],
         y_velocity=velocity[1],
+        # calculate rolling reward
+        episode_reward=state.metrics["episode_reward"]+reward
     )
 
     return state.replace(
