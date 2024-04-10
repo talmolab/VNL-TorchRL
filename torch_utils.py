@@ -212,7 +212,7 @@ def eval_model(actor, test_env, num_episodes=3):
             break_when_any_done=True,
             max_steps=10_000_000,
         )
-        reward = td_test["next", "episode_reward"][td_test["next", "done"]]
+        reward = td_test["state", "metrics", "episode_reward"]
         test_rewards.append(reward.cpu())
     del td_test
     return torch.cat(test_rewards, 0).mean()

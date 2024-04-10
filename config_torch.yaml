@@ -4,14 +4,14 @@ env:
   
 # collector
 collector:
-  frames_per_batch: 2048
+  frames_per_batch: 128
   total_frames: 1_000_000
 
 # logger
 logger:
   backend: wandb
   project_name: torchrl_example_ppo
-  group_name: null
+  group_name: Salk
   exp_name: Mujoco_Schulman17
   test_interval: 1_000_000
   num_test_episodes: 5
