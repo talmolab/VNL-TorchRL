@@ -70,71 +70,97 @@ def make_parallel_env(env_name, num_envs, device, is_test=False):
 
 # ====================================================================
 # Model utils
+# The Model Utils are borrowed from the wrong file. We should use the
+# mujoco util 
+# --------------------------------------------------------------------
+
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+import torch.nn
+import torch.optim
+
+from tensordict.nn import AddStateIndependentNormalScale, TensorDictModule
+from torchrl.data import CompositeSpec
+from torchrl.envs import (
+    ClipTransform,
+    DoubleToFloat,
+    ExplorationType,
+    RewardSum,
+    StepCounter,
+    TransformedEnv,
+    VecNorm,
+)
+from torchrl.envs.libs.gym import GymEnv
+from torchrl.modules import MLP, ProbabilisticActor, TanhNormal, ValueOperator
+
+# ====================================================================
+# Environment utils
 # --------------------------------------------------------------------
 
 
-def make_ppo_modules_pixels(proof_environment):
+def make_env(env_name="Rodent", frame_skip=4, is_test=False):
+    brax_envs.register_environment("rodent", Rodent)
+    env = BraxWrapper(brax_envs.get_environment("rodent"), 
+                      iterations=6,
+                      ls_iterations=3)
+
+    env = TransformedEnv(env)
+    return env
+
+
+
+# ====================================================================
+# Model utils
+# --------------------------------------------------------------------
+
+
+def make_ppo_models_state(proof_environment):
 
     # Define input shape
-    input_shape = proof_environment.observation_spec["pixels"].shape
+    input_shape = proof_environment.observation_spec["observation"].shape
 
-    # Define distribution class and kwargs
-    if isinstance(proof_environment.action_spec.space, DiscreteBox):
-        num_outputs = proof_environment.action_spec.space.n
-        distribution_class = OneHotCategorical
-        distribution_kwargs = {}
-    else:  # is ContinuousBox
-        num_outputs = proof_environment.action_spec.shape
-        distribution_class = TanhNormal
-        distribution_kwargs = {
-            "min": proof_environment.action_spec.space.low,
-            "max": proof_environment.action_spec.space.high,
-        }
+    # Define policy output distribution class
+    num_outputs = proof_environment.action_spec.shape[-1]
+    distribution_class = TanhNormal
+    distribution_kwargs = {
+        "min": proof_environment.action_spec.space.low,
+        "max": proof_environment.action_spec.space.high,
+        "tanh_loc": False,
+    }
 
-    # Define input keys
-    in_keys = ["pixels"]
-
-    # Define a shared Module and TensorDictModule (CNN + MLP)
-    common_cnn = ConvNet(
-        activation_class=torch.nn.ReLU,
-        num_cells=[32, 64, 64],
-        kernel_sizes=[8, 4, 3],
-        strides=[4, 2, 1],
-    )
-    common_cnn_output = common_cnn(torch.ones(input_shape))
-    common_mlp = MLP(
-        in_features=common_cnn_output.shape[-1],
-        activation_class=torch.nn.ReLU,
-        activate_last_layer=True,
-        out_features=512,
-        num_cells=[],
-    )
-    common_mlp_output = common_mlp(common_cnn_output)
-
-    # Define shared net as TensorDictModule
-    common_module = TensorDictModule(
-        module=torch.nn.Sequential(common_cnn, common_mlp),
-        in_keys=in_keys,
-        out_keys=["common_features"],
+    # Define policy architecture
+    policy_mlp = MLP(
+        in_features=input_shape[-1],
+        activation_class=torch.nn.Tanh,
+        out_features=num_outputs,  # predict only loc
+        num_cells=[64, 64],
     )
 
-    # Define on head for the policy
-    policy_net = MLP(
-        in_features=common_mlp_output.shape[-1],
-        out_features=num_outputs,
-        activation_class=torch.nn.ReLU,
-        num_cells=[],
-    )
-    policy_module = TensorDictModule(
-        module=policy_net,
-        in_keys=["common_features"],
-        out_keys=["logits"],
+    # Initialize policy weights
+    for layer in policy_mlp.modules():
+        if isinstance(layer, torch.nn.Linear):
+            torch.nn.init.orthogonal_(layer.weight, 1.0)
+            layer.bias.data.zero_()
+
+    # Add state-independent normal scale
+    policy_mlp = torch.nn.Sequential(
+        policy_mlp,
+        AddStateIndependentNormalScale(
+            proof_environment.action_spec.shape[-1], scale_lb=1e-8
+        ),
     )
 
     # Add probabilistic sampling of the actions
     policy_module = ProbabilisticActor(
-        policy_module,
-        in_keys=["logits"],
+        TensorDictModule(
+            module=policy_mlp,
+            in_keys=["observation"],
+            out_keys=["loc", "scale"],
+        ),
+        in_keys=["loc", "scale"],
         spec=CompositeSpec(action=proof_environment.action_spec),
         distribution_class=distribution_class,
         distribution_kwargs=distribution_kwargs,
@@ -142,45 +168,32 @@ def make_ppo_modules_pixels(proof_environment):
         default_interaction_type=ExplorationType.RANDOM,
     )
 
-    # Define another head for the value
-    value_net = MLP(
-        activation_class=torch.nn.ReLU,
-        in_features=common_mlp_output.shape[-1],
+    # Define value architecture
+    value_mlp = MLP(
+        in_features=input_shape[-1],
+        activation_class=torch.nn.Tanh,
         out_features=1,
-        num_cells=[],
-    )
-    value_module = ValueOperator(
-        value_net,
-        in_keys=["common_features"],
+        num_cells=[64, 64],
     )
 
-    return common_module, policy_module, value_module
+    # Initialize value weights
+    for layer in value_mlp.modules():
+        if isinstance(layer, torch.nn.Linear):
+            torch.nn.init.orthogonal_(layer.weight, 0.01)
+            layer.bias.data.zero_()
+
+    # Define value module
+    value_module = ValueOperator(
+        value_mlp,
+        in_keys=["observation"],
+    )
+
+    return policy_module, value_module
 
 
 def make_ppo_models(env_name):
-
-    proof_environment = make_parallel_env(env_name, 1, device="cuda")
-    common_module, policy_module, value_module = make_ppo_modules_pixels(
-        proof_environment
-    )
-
-    # Wrap modules in a single ActorCritic operator
-    actor_critic = ActorValueOperator(
-        common_operator=common_module,
-        policy_operator=policy_module,
-        value_operator=value_module,
-    )
-
-    with torch.no_grad():
-        td = proof_environment.rollout(max_steps=100, break_when_any_done=False)
-        td = actor_critic(td)
-        del td
-
-    actor = actor_critic.get_policy_operator()
-    critic = actor_critic.get_value_operator()
-
-    del proof_environment
-
+    proof_environment = make_env(env_name)
+    actor, critic = make_ppo_models_state(proof_environment)
     return actor, critic
 
 
