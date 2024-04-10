@@ -12,9 +12,10 @@ dependencies:
     - mujoco
     - mujoco-mjx
     - dm_control
-    #- torchrl
+    - torchrl
+    - hydra-core
     # use our modified torchrl fork
-    - git+https://github.com/scott-yj-yang/rl.git
+    # - git+https://github.com/scott-yj-yang/rl.git
 
 # Still need to use the following code to enable JAX on CUDA 
 
