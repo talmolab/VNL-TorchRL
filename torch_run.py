@@ -21,6 +21,9 @@ os.environ['XLA_FLAGS'] = (
     '--xla_gpu_enable_highest_priority_async_stream=true '
 )
 
+# Disable GPU memory preallocation
+os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
+
 n_gpus = 1 #jax.device_count(backend="gpu")
 print(f"Using {n_gpus} GPUs")
 
