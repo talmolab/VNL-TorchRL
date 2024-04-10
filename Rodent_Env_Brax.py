@@ -14,7 +14,7 @@ import numpy as np
 import os
 
 _XML_PATH = "./../../../models/rodent_optimized.xml"
-
+# _XML_PATH = "./models/rodent_optimized.xml"
 
 class Rodent(PipelineEnv):
 
