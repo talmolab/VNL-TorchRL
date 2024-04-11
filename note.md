@@ -1,8 +1,25 @@
+# Software Stack Overviews
+
+| Low Level -> High Level | `MuJoCo` | `MuJoCo-MJX` | `dm_control/mjcf` | `dm_control` | `brax` | `torch-rl` | `brax/training` | `acme` + `launchpad` |
+|---|---|---|---|---|---|---|---|---|
+| **Purpose** | Physic Simulation | GPU Accelerated PhySim | xml manipulation | env/task | env/task | RL Training | RL Training | RL Training + Distributed |
+| **Pros** | - | - | Easy access to xml file element, named element more sophisticated reward and observation  engineering | Have predefined environments in the deep neuroethology paper.  Can Directly use `mjcf`. | Native support for `mujoco-mjx` <br> Seems to be more sample efficient in certain algorithm implementation such as `ppo` | Easy to use, good documentation and community supports | Everything in JAX, significant speed up. | what they used in google in the deep neuroehtology paper. |
+| **Cons** | We have no chocie | We have no chocie | Heavily depends on `dm_control`. <br> It works when the system is fully on dm_control  | `acme` did not properly execute / hard to modify. <br> did not natively support  `mujoco-mjx`. | Still in early development. The nature of compilation +  model complexity makes it harder to debug. We need to re-invent the wheel  of `dm_control/mjcf` | Overhead in converting JAX->torch tensor in every env steps. <br> Need to reinvent the wheel, to adapt `dm_control/mjcf` and `mujoco-mjx` | Did not have a reliable checkpoint system yet, which means that we cannot have reproducible results. | No Documentation, elusive wrappers,  open source but not open hardware protocols |
+
+
+## Approachable Paths
+
+### TODO add current attempts.
+
+
 ## Regarding Using TorchRL with Brax
 
 Each step's statistics are forced to convert from JAX tensor to torch tensor on GPU. The overhead might be potentially very high.
 
 The torch-rl provided brax wrapper but it does not manipulate the states and reward and observation nicely into the torchrl module.
+
+There is a million things that makes the products of two tech giant companies, google and meta, to work together. We are stuck with MuJoCo.
+
 
 ### Debugging Progress: 
 In running `torch_run.py`, when extending the replay buffer of the data, I encounter the following issue:
@@ -39,3 +56,17 @@ Traceback (most recent call last):
     self.buffer = mmap.mmap(self.fd, self.size)
 ValueError: cannot mmap an empty file
 ```
+
+This error message is caused by `mmap` (memory map) an empty file, where the `self.size` might be 0. Might have to do with some of the training script and how brax's environment stepping API (how it stores the state, pos, reward, etc.) did not interact well with the replay-buffer in `torchrl` 
+
+#### Re-accessing the importance of Brax
+
+Brax sits between the simulator (low level physic sim) and the learning layer (high level RL). In this case of using `mujoco-mjx`, I don't think `brax` provide us with any goods other than injecting random unnecessary API between `brax` and `torchrl`. We might be able to directly write wrappers for the `mujoco-mjx` and let the `torchrl` directly interact with the `mujoco-mjx`.
+
+### Designing Good Reward Function
+
+Use the [mujoco_mpc](https://github.com/google-deepmind/mujoco_mpc)'s predictive sampling (like MCTS in real time) to engineer a good reward function for our rodent fellas. 
+
+
+> TODO: We need to inject our rodent model into the module and mess around with the nobs like in the demo.
+
