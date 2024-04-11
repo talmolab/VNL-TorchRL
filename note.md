@@ -4,13 +4,20 @@
 |---|---|---|---|---|---|---|---|---|
 | **Purpose** | Physic Simulation | GPU Accelerated PhySim | xml manipulation | env/task | env/task | RL Training | RL Training | RL Training + Distributed |
 | **Pros** | - | - | Easy access to xml file element, named element more sophisticated reward and observation  engineering | Have predefined environments in the deep neuroethology paper.  Can Directly use `mjcf`. | Native support for `mujoco-mjx` <br> Seems to be more sample efficient in certain algorithm implementation such as `ppo` | Easy to use, good documentation and community supports | Everything in JAX, significant speed up. | what they used in google in the deep neuroehtology paper. |
-| **Cons** | We have no chocie | We have no chocie | Heavily depends on `dm_control`. <br> It works when the system is fully on dm_control  | `acme` did not properly execute / hard to modify. <br> did not natively support  `mujoco-mjx`. | Still in early development. The nature of compilation +  model complexity makes it harder to debug. We need to re-invent the wheel  of `dm_control/mjcf` | Overhead in converting JAX->torch tensor in every env steps. <br> Need to reinvent the wheel, to adapt `dm_control/mjcf` and `mujoco-mjx` | Did not have a reliable checkpoint system yet, which means that we cannot have reproducible results. | No Documentation, elusive wrappers,  open source but not open hardware protocols |
+| **Cons** | We have no choice | We have no choice | Heavily depends on `dm_control`. <br> It works when the system is fully on dm_control  | `acme` did not properly execute / hard to modify. <br> did not natively support  `mujoco-mjx`. | Still in early development. The nature of compilation +  model complexity makes it harder to debug. We need to re-invent the wheel  of `dm_control/mjcf` | Overhead in converting JAX->torch tensor in every env steps. <br> Need to reinvent the wheel, to adapt `dm_control/mjcf` and `mujoco-mjx` | Did not have a reliable checkpoint system yet, which means that we cannot have reproducible results. | No Documentation, elusive wrappers,  open source but not open hardware protocols |
 
 
 ## Approachable Paths
 
-### TODO add current attempts.
+|  | `MuJoCo-MJX` | `Brax` | `Torch-RL` | **Proposed Solutions** |
+|---|---|---|---|---|
+| **Purpose** | Acc. PhySim  | Env/Task <br>Wrap mjx layer | RL Training | 1. Ditch `Brax`, directly warp the env using `torch` structure<br>`MuJoCo + Torch-RL` or `MuJoCo-MJX + torchrl`<br><br>_Implications:_ Need time/effort to adapt APIs, but will be relatively robust to changes because we did not depend on `brax` (from google) by `torchrl` (by meta) anymore |
+| **Advantage** | Efficient & Easy to Scale | OOB support for MJX | Transparent/Flexible Arch.<br>Easier NN Modifications<br>Good Community Supports | 2. Ditch `torchrl`, use `mujoco-mjx + brax + brax/training`<br><br>_Implications:_ Mostly under same JAX arch and API should be consistent, but need to learn functional programming and JAX to enable custom NN arch.  |
+| **Road Block** | - | Huge Overhead in tensor conversion | API Change in Brax+Torch Inconsistent |  |
 
+---
+---
+---
 
 ## Regarding Using TorchRL with Brax
 
