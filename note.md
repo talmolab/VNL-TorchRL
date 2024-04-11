@@ -4,8 +4,9 @@
 |---|---|---|---|---|---|---|---|---|
 | **Purpose** | Physic Simulation | GPU Accelerated PhySim | xml manipulation | env/task | env/task | RL Training | RL Training | RL Training + Distributed |
 | **Pros** | - | - | Easy access to xml file element, named element more sophisticated reward and observation  engineering | Have predefined environments in the deep neuroethology paper.  Can Directly use `mjcf`. | Native support for `mujoco-mjx` <br> Seems to be more sample efficient in certain algorithm implementation such as `ppo` | Easy to use, good documentation and community supports | Everything in JAX, significant speed up. | what they used in google in the deep neuroehtology paper. |
-| **Cons** | We have no choice | We have no choice | Heavily depends on `dm_control`. <br> It works when the system is fully on dm_control  | `acme` did not properly execute / hard to modify. <br> did not natively support  `mujoco-mjx`. | Still in early development. The nature of compilation +  model complexity makes it harder to debug. We need to re-invent the wheel  of `dm_control/mjcf` | Overhead in converting JAX->torch tensor in every env steps. <br> Need to reinvent the wheel, to adapt `dm_control/mjcf` and `mujoco-mjx` | Did not have a reliable checkpoint system yet, which means that we cannot have reproducible results. | No Documentation, elusive wrappers,  open source but not open hardware protocols |
+| **Cons** | We have no choice, Maybe OpenSim? | We have no choice | Heavily depends on `dm_control`. <br> It works when the system is fully on dm_control  | `acme` did not properly execute / hard to modify. <br> did not natively support  `mujoco-mjx`. | Still in early development. The nature of compilation +  model complexity makes it harder to debug. We need to re-invent the wheel  of `dm_control/mjcf` | Overhead in converting JAX->torch tensor in every env steps. <br> Need to reinvent the wheel, to adapt `dm_control/mjcf` and `mujoco-mjx` | Did not have a reliable checkpoint system yet, which means that we cannot have reproducible results. | No Documentation, elusive wrappers,  open source but not open hardware protocols |
 
+---
 
 ## Approachable Paths
 
@@ -16,8 +17,19 @@
 | **Road Block** | - | Huge Overhead in tensor conversion | API Change in Brax+Torch Inconsistent |  |
 
 ---
----
----
+## Prospectively Planning
+
+To make VNL work, we need our software stacks to have the following characteristics:
+
+1. Easy to Debug & Modify
+    - Custom NN architecture + vision/proprioception encoder/decoder
+2. Efficient in Training/Inference
+    - Online/Offline RL are computationally expensive, we need our system to make the computation tractable
+3. Easy Access to the Activation/Rollout and Perturbation
+    - The analysis builds upon those information
+    - Perturbation/Ablation to the network -> neuroscience experiments
+4. ...
+
 
 ## Regarding Using TorchRL with Brax
 
