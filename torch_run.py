@@ -80,9 +80,10 @@ def main(cfg: "DictConfig"):  # noqa: F821
         total_frames=cfg.collector.total_frames,
         device=device,
         storing_device=device,
-        split_trajs=False,
-        #max_frames_per_traj=-1,
+        #split_trajs=False,
+        max_frames_per_traj=-1,
     )
+
 
     # Create data buffer
     sampler = SamplerWithoutReplacement()
