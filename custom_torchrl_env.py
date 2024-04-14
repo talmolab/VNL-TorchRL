@@ -133,7 +133,7 @@ class RodentRunEnv(CustomMujocoEnvBase):
             raise ValueError("Passed action contains NaNs.")
         state_size = mujoco.mj_stateSize(self._mj_model, mujoco.mjtState.mjSTATE_FULLPHYSICS)
         control_size = mujoco.mj_stateSize(self._mj_model, mujoco.mjtState.mjSTATE_CTRL)
-        print(control_size)
+        print(self.batch_size.numel())
 
         com_before = torch.from_numpy(np.array(self.simulation_pool.getSubtree_com())[:, 1, :]).to(self.device).reshape(self.batch_size + (3,))
         self.simulation_pool.setControl(np.clip(action.cpu().numpy().reshape(self.batch_size.numel(), control_size), -1, 1))
