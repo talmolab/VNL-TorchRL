@@ -94,7 +94,7 @@ class CustomMujocoEnvDummy(CustomMujocoEnvBase):
     
 class RodentRunEnv(CustomMujocoEnvBase):
 
-    def __init__(self, seed=None, batch_size=[1], device="cpu", worker_thread_count = os.cpu_count()):
+    def __init__(self, seed=None, batch_size=[30], device="cpu", worker_thread_count = os.cpu_count()):
         
         _XML_PATH = "models/rodent_optimized.xml"
 
