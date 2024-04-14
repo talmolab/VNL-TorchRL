@@ -27,7 +27,7 @@ config = {
     'max_grad_norm': 1.0,
     'device': 'cuda',
     'batch_size': 1024,
-    'env_worker_threads': 2, #os.cpu_count()-4,
+    'env_worker_threads': 5, #os.cpu_count()-4,
     'frames_per_batch': 16*1024,
     'total_frames': 64*2048*1024,
     'clip_epsilon': 0.2,
