@@ -35,7 +35,7 @@ config = {
     "batch_size": 4096*n_gpus,
     "learning_rate": 5e-5,
     "terminate_when_unhealthy": True,
-    "run_platform": "Harvard",
+    "run_platform": "Salk",
     "solver": "cg",
     "iterations": 4,
     "ls_iterations": 4,
@@ -58,7 +58,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
 
     from torch_utils import eval_model, make_env, make_ppo_models
 
-    device = "cpu " if not torch.cuda.device_count() else "cuda"
+    device = "cpu" #if not torch.cuda.device_count() else "cuda"
 
     num_mini_batches = cfg.collector.frames_per_batch // cfg.loss.mini_batch_size
 

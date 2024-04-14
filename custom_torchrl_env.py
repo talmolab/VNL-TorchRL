@@ -133,7 +133,7 @@ class RodentRunEnv(CustomMujocoEnvBase):
             raise ValueError("Passed action contains NaNs.")
         state_size = mujoco.mj_stateSize(self._mj_model, mujoco.mjtState.mjSTATE_FULLPHYSICS)
         
-        control_size = mujoco.mj_stateSize(self._mj_model, mujoco.mjtState.mjSTATE_CTRL) / 2
+        control_size = mujoco.mj_stateSize(self._mj_model, mujoco.mjtState.mjSTATE_CTRL)
         
         #print(self.batch_size.numel())
 
