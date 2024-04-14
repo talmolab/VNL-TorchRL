@@ -164,7 +164,7 @@ def eval_model(actor, test_env, num_episodes=3):
 
 
 
-def render_rollout(actor, env, steps, camera="side"):
+def render_rollout(actor, env, steps, camera=3):
     rollout = env.rollout(
             policy=actor,
             auto_reset=True,
