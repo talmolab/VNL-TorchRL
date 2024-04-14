@@ -49,8 +49,8 @@ for var in slurm_vars:
 id = uuid.uuid4()
 
 wandb.init(
-    project="Test-Custom-TorchRL-Env",
-    notes="Testing rodent running with PPO. This test is local.",
+    project="Mujoco-TorchRL-CPU",
+    notes="Testing rodent running with PPO, this test is on the Salk server.",
     name=f"ppotest_{id}",
     config=config
 )
