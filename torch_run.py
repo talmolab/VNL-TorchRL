@@ -91,6 +91,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
         entropy_coef=cfg.loss.entropy_coef,
         critic_coef=cfg.loss.critic_coef,
         normalize_advantage=True,
+        loss_critic_type="smooth_l1",
     )
 
     # Create optimizers
