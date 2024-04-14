@@ -15,7 +15,7 @@ import mujoco._simulation_pool
 
 class CustomMujocoEnvBase(torchrl.envs.EnvBase):
     def __init__(self, mj_model: mujoco.MjModel, seed=None, batch_size=[], device="cpu",
-                 worker_thread_count:int = os.cpu_count()):
+                 worker_thread_count:int = os.cpu_count()): # defult is 6
         super().__init__(device=device, batch_size=batch_size)
         self._mj_model = mj_model
         self._make_spec()
