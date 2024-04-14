@@ -10,6 +10,7 @@ import mujoco
 #This package is in a fork of MuJoCo: https://github.com/emiwar/mujoco/tree/feature/simulation_pool
 #Build and install according to 
 #https://mujoco.readthedocs.io/en/stable/programming/index.html#building-from-source
+
 import mujoco._simulation_pool
 
 class CustomMujocoEnvBase(torchrl.envs.EnvBase):
