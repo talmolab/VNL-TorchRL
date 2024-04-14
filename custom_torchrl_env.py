@@ -105,6 +105,7 @@ class RodentRunEnv(CustomMujocoEnvBase):
         # filepath = hydra.utils.to_absolute_path(_XML_PATH) # direct to VNL folder
         # mj_model = mujoco.MjModel.from_xml_path(filepath)
 
+        # connect to dm_control
         arena = Gap_Vnl(platform_length=distributions.Uniform(1.5, 2.0),
                         gap_length=distributions.Uniform(.1, .35),
                         corridor_width=10,
@@ -124,7 +125,8 @@ class RodentRunEnv(CustomMujocoEnvBase):
         task.initialize_episode_mjcf(random_state)
         physics = mjcf_dm.Physics.from_mjcf_model(task.root_entity.mjcf_model)
 
-        mj_model = physics
+        mj_model = physics.model.ptr
+
         super().__init__(mj_model=mj_model, seed=seed,
                          batch_size=batch_size, device=device,
                          worker_thread_count=worker_thread_count)
