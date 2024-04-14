@@ -5,7 +5,6 @@
 
 import torch.nn
 import torch.optim
-from tensordict.nn.distributions import NormalParamExtractor
 
 from tensordict.nn import AddStateIndependentNormalScale, TensorDictModule
 from torchrl.data import CompositeSpec
@@ -24,9 +23,7 @@ from torchrl.modules import (
     ProbabilisticActor,
     TanhNormal,
     ValueOperator,
-    ActorValueOperator,
-    ConvNet
-    )
+    ConvNet)
 
 import mujoco
 import moviepy.editor
@@ -54,13 +51,13 @@ def make_env(batch_size, worker_threads, device="cpu"):
 
 
 def make_ppo_models_state(proof_environment):
+    '''No common module needed, network uses seperat pathway anyways'''
 
     # Define input shape
     input_shape = proof_environment.observation_spec["observation"].shape
 
     # Define policy output distribution class
-    num_outputs = 2 * proof_environment.action_spec.shape[-1]
-
+    num_outputs = proof_environment.action_spec.shape[-1]
     distribution_class = TanhNormal
     distribution_kwargs = {
         "min": proof_environment.action_spec.space.low,
@@ -68,35 +65,19 @@ def make_ppo_models_state(proof_environment):
         "tanh_loc": False,
     }
 
-    in_keys = ["observation"]
+     # # Define a shared Module and TensorDictModule (CNN + MLP)
     # common_cnn = ConvNet(
     #     activation_class=torch.nn.ReLU,
     #     num_cells=[32, 64, 64],
     #     kernel_sizes=[8, 4, 3],
     #     strides=[4, 2, 1],
     # )
-    # common_cnn_output = common_cnn(torch.ones(input_shape))
     
-    common_mlp = MLP(
-        in_features=input_shape[-1], #common_cnn_output.shape[-1],
-        activation_class=torch.nn.ReLU,
-        activate_last_layer=True,
-        out_features=512,
-        num_cells=[],
-    )
-    common_mlp_output = common_mlp(torch.ones(input_shape))#(common_cnn_output)
-
-    # Define shared net as TensorDictModule
-    common_module = TensorDictModule(
-        module=torch.nn.Sequential(#common_cnn,
-                                   common_mlp),
-        in_keys=in_keys,
-        out_keys=["common_features"],
-    )
+    # common_cnn_output = common_cnn(torch.ones(input_shape))
 
     # Define policy architecture
     policy_mlp = MLP(
-        in_features=common_mlp_output.shape[-1],
+        in_features=input_shape[-1],
         activation_class=torch.nn.Tanh,
         out_features=num_outputs,  # predict only loc
         num_cells=[64, 64],
@@ -108,7 +89,7 @@ def make_ppo_models_state(proof_environment):
             torch.nn.init.orthogonal_(layer.weight, 1.0)
             layer.bias.data.zero_()
 
-    # Add state-independent normal scale
+    # Add state-independent normal scale, cover TanhNormal
     policy_mlp = torch.nn.Sequential(
         policy_mlp,
         AddStateIndependentNormalScale(
@@ -116,14 +97,11 @@ def make_ppo_models_state(proof_environment):
         ),
     )
 
-    policy_net = torch.nn.Sequential(policy_mlp,
-                                     NormalParamExtractor(),)
-
     # Add probabilistic sampling of the actions
     policy_module = ProbabilisticActor(
         TensorDictModule(
-            module=policy_net,
-            in_keys=["common_features"],
+            module=policy_mlp,
+            in_keys=["observation"],
             out_keys=["loc", "scale"],
         ),
         in_keys=["loc", "scale"],
@@ -151,33 +129,17 @@ def make_ppo_models_state(proof_environment):
     # Define value module
     value_module = ValueOperator(
         value_mlp,
-        in_keys=["common_features"],
+        in_keys=["observation"],
     )
 
-    return common_module, policy_module, value_module
+    return policy_module, value_module
 
 
 def make_ppo_models():
+    '''keep this one simple'''
+
     proof_environment = make_env(batch_size=[1], worker_threads=1, device="cpu")
-    common_module, policy_module, value_module = make_ppo_models_state(proof_environment)
-
-    # Wrap modules in a single ActorCritic operator
-    actor_critic = ActorValueOperator(
-        common_operator=common_module,
-        policy_operator=policy_module,
-        value_operator=value_module,
-    )
-
-    # with torch.no_grad():
-    #     td = proof_environment.rollout(max_steps=100, break_when_any_done=False)
-    #     td = actor_critic(td)
-    #     del td
-
-    actor = actor_critic.get_policy_operator()
-    critic = actor_critic.get_value_operator()
-
-    del proof_environment
-
+    actor, critic = make_ppo_models_state(proof_environment)
     return actor, critic
 
 
@@ -200,8 +162,6 @@ def eval_model(actor, test_env, num_episodes=3):
         test_rewards.append(reward.cpu())
     del td_test
     return torch.cat(test_rewards, 0)
-
-
 
 def render_rollout(actor, env, steps, camera="side"):
     rollout = env.rollout(

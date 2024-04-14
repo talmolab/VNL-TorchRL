@@ -13,6 +13,7 @@ import os
 
 @hydra.main(config_path="", config_name="config_torch", version_base="1.1")
 def main(cfg: "DictConfig"):  # noqa: F821
+    '''same as torch_run.py'''
 
     import time
 
