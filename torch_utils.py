@@ -97,7 +97,7 @@ def make_ppo_modules_pixels(proof_environment):
         distribution_class = OneHotCategorical
         distribution_kwargs = {}
     else:  # is ContinuousBox
-        num_outputs = 2* proof_environment.action_spec.shape
+        num_outputs = 2 * proof_environment.action_spec.shape[-1]
         distribution_class = TanhNormal
         distribution_kwargs = {
             "min": proof_environment.action_spec.space.low,
