@@ -11,7 +11,7 @@ import hydra
 from torchrl._utils import logger as torchrl_logger
 import os
 
-@hydra.main(config_path="", config_name="config", version_base="1.1")
+@hydra.main(config_path="", config_name="config_torch", version_base="1.1")
 def main(cfg: "DictConfig"):  # noqa: F821
 
     import time
