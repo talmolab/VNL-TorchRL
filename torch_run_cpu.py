@@ -15,7 +15,7 @@ from torchrl.envs import (
     StepCounter,
     TransformedEnv,
     RewardSum
-)
+    )
 
 import uuid
 
@@ -27,7 +27,7 @@ config = {
     'max_grad_norm': 1.0,
     'device': 'cuda',
     'batch_size': 1024,
-    'env_worker_threads': 1, #os.cpu_count()-4,
+    'env_worker_threads': 2, #os.cpu_count()-4,
     'frames_per_batch': 16*1024,
     'total_frames': 64*2048*1024,
     'clip_epsilon': 0.2,
@@ -35,13 +35,14 @@ config = {
     'lambda': 0.95,
     'entropy_eps': 1e-4,
     'max_steps': 1000,
-}
+    }
 
 slurm_vars = ("SLURM_CLUSTER_NAME", "SLURM_JOB_PARTITION"
               "SLURMD_NODENAME", "SLURM_JOB_ACCOUNT",
               "SLURM_CPUS_ON_NODE", "SLURM_GPUS",
               "SLURM_JOB_START_TIME", "SLURM_MEM_PER_NODE",
               "SLURM_NNODES", "SLURM_RESTART_COUNT")
+
 for var in slurm_vars:
     if var in os.environ:
         config[f"${var}"] = os.environ[var]
@@ -49,7 +50,7 @@ for var in slurm_vars:
 id = uuid.uuid4()
 
 wandb.init(
-    project="Mujoco-TorchRL-CPU",
+    project="torchrl_cpu_ppo_single_env",
     notes="Testing rodent running with PPO, this test is on the Salk server.",
     name=f"ppotest_{id}",
     config=config
@@ -70,7 +71,7 @@ env = TransformedEnv(
         StepCounter(max_steps=config['max_steps']),
         RewardSum()
     ),
-)
+    )
 
 env.transform[0].init_stats(num_iter=48, cat_dim=0, reduce_dim=tuple(range(len(env.batch_size)+1)))
 
@@ -83,10 +84,14 @@ actor_net = torch.nn.Sequential(
     torch.nn.Tanh(),
     torch.nn.LazyLinear(2 * env.action_spec.shape[-1], device=device),
     tensordict.nn.distributions.NormalParamExtractor(),
-)
+    )
+
 policy_module = tensordict.nn.TensorDictModule(
-    actor_net, in_keys=["observation"], out_keys=["loc", "scale"]
-)
+    actor_net,
+    in_keys=["observation"],
+    out_keys=["loc", "scale"],
+    )
+
 policy_module = torchrl.modules.ProbabilisticActor(
     module=policy_module,
     spec=env.action_spec,
@@ -98,7 +103,8 @@ policy_module = torchrl.modules.ProbabilisticActor(
     },
     return_log_prob=True,
     # we'll need the log-prob for the numerator of the importance weights
-)
+    )
+
 value_net = torch.nn.Sequential(
     torch.nn.LazyLinear(config["num_cells"], device=device),
     torch.nn.Tanh(),
@@ -107,13 +113,16 @@ value_net = torch.nn.Sequential(
     torch.nn.LazyLinear(config["num_cells"], device=device),
     torch.nn.Tanh(),
     torch.nn.LazyLinear(1, device=device),
-)
+    )
+
 value_module = torchrl.modules.ValueOperator(
     module=value_net,
     in_keys=["observation"]
-)
+    )
+
 print("Testing policy module output shape:", policy_module(env.reset()).shape)
 print("Testing value module output shape:", value_module(env.reset()).shape)
+
 collector = torchrl.collectors.SyncDataCollector(
     env,
     policy_module,
@@ -121,14 +130,16 @@ collector = torchrl.collectors.SyncDataCollector(
     total_frames=config["total_frames"],
     split_trajs=False,
     device=device,
-)
+    )
+
 advantage_module = torchrl.objectives.value.GAE(
     gamma=config["gamma"],
     lmbda=config["lambda"],
     value_network=value_module,
     average_gae=True,
     device=device
-)
+    )
+
 loss_module = torchrl.objectives.ClipPPOLoss(
     actor_network=policy_module,
     critic_network=value_module,
@@ -138,7 +149,8 @@ loss_module = torchrl.objectives.ClipPPOLoss(
     # these keys match by default but we set this for completeness
     critic_coef=1.0,
     loss_critic_type="smooth_l1",
-)
+    )
+
 optim = torch.optim.Adam(loss_module.parameters(), config["lr"])
 
 for i, tensordict_data in tqdm.tqdm(enumerate(collector)):
