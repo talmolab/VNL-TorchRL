@@ -173,7 +173,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
             )
 
         training_start = time.time()
-        for j in range(cfg_loss_ppo_epochs):
+        for j in range(data.shape[0]):#(cfg_loss_ppo_epochs):
             # for number of epoch for ppo
 
             # Compute GAE
