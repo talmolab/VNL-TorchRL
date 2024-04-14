@@ -195,7 +195,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
                 critic_loss = loss["loss_critic"]
                 actor_loss = loss["loss_objective"] + loss["loss_entropy"]
 
-                print(actor_loss)
+                # print(actor_loss)
 
                 # Backward pass, update in the direction of gradient
                 actor_loss.backward()
