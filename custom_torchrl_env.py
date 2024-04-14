@@ -25,7 +25,8 @@ class CustomMujocoEnvBase(torchrl.envs.EnvBase):
         flat_batch_size = self.batch_size.numel()
         self.simulation_pool = mujoco._simulation_pool.SimulationPool(mj_model, flat_batch_size,
                                                                       worker_thread_count,
-                                                                      mujoco.mjtState.mjSTATE_FULLPHYSICS)
+                                                                      #mujoco.mjtState.mjSTATE_FULLPHYSICS
+                                                                      )
 
     def _make_spec(self):
         state_size = mujoco.mj_stateSize(self._mj_model, mujoco.mjtState.mjSTATE_FULLPHYSICS)
