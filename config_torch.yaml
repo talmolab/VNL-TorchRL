@@ -12,7 +12,7 @@ logger:
   backend: wandb
   project_name: torchrl_cpu_ppo
   group_name: null
-  exp_name: Mujoco_Schulman17
+  exp_name: Mujoco_CPU
   test_interval: 1_000_000
   num_test_episodes: 5
 

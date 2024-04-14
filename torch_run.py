@@ -7,7 +7,7 @@ import yaml
 import hydra
 from torchrl._utils import logger as torchrl_logger
 
-from Rodent_Env_Brax import Rodent
+#from Rodent_Env_Brax import Rodent
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
