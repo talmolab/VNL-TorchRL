@@ -14,7 +14,7 @@ dependencies:
     - dm_control
     #\- torchrl
     - git+https://github.com/scott-yj-yang/rl.git  # use our modified torchrl fork
-    #- git+https://github.com/KevinBian107/torch_rl_vnl.git # use our modified torchrl fork, change torchrl directly
+    #- git+https://github.com/KevinBian107/torch_rl_vnl.git
     - hydra-core --upgrade
     - moviepy
 
