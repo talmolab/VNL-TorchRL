@@ -8,8 +8,8 @@ import hydra.utils
 
 from dm_control import mjcf as mjcf_dm
 from dm_control.composer.variation import distributions
-from vnl_dm_control.arena import Task_Vnl, Gap_Vnl
-import vnl_dm_control.rodent_base as rodent_base
+from arena import Task_Vnl, Gap_Vnl
+import rodent_base as rodent_base
 
 import mujoco
 #This package is in a fork of MuJoCo: https://github.com/emiwar/mujoco/tree/feature/simulation_pool
