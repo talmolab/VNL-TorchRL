@@ -12,34 +12,16 @@ from torchrl._utils import logger as torchrl_logger
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
-# GPU Setting
-os.environ['XLA_FLAGS'] = (
-    '--xla_gpu_enable_triton_softmax_fusion=true '
-    '--xla_gpu_triton_gemm_any=True '
-    '--xla_gpu_enable_async_collectives=true '
-    '--xla_gpu_enable_latency_hiding_scheduler=true '
-    '--xla_gpu_enable_highest_priority_async_stream=true '
-)
-
-n_gpus = 1 #jax.device_count(backend="gpu")
-print(f"Using {n_gpus} GPUs")
-
-config = {
-    "env_name": "rodent",
-    "algo_name": "ppo",
-    "task_name": "run",
-    "num_envs": 4096*n_gpus,
-    "num_timesteps": 500_000_000,
-    "eval_every": 1_000_000,
-    "episode_length": 1000,
-    "batch_size": 4096*n_gpus,
-    "learning_rate": 5e-5,
-    "terminate_when_unhealthy": True,
-    "run_platform": "Salk",
-    "solver": "cg",
-    "iterations": 4,
-    "ls_iterations": 4,
-}
+# # GPU Setting
+# os.environ['XLA_FLAGS'] = (
+#     '--xla_gpu_enable_triton_softmax_fusion=true '
+#     '--xla_gpu_triton_gemm_any=True '
+#     '--xla_gpu_enable_async_collectives=true '
+#     '--xla_gpu_enable_latency_hiding_scheduler=true '
+#     '--xla_gpu_enable_highest_priority_async_stream=true '
+# )
+# n_gpus = 1 #jax.device_count(backend="gpu")
+# print(f"Using {n_gpus} GPUs")
 
 @hydra.main(config_path="", config_name="config_torch", version_base="1.1")
 def main(cfg: "DictConfig"):  # noqa: F821

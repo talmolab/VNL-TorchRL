@@ -48,22 +48,18 @@ from Rodent_Env_Brax import Rodent
 
 
 # def make_env(env_name="rodent", frame_skip=4, is_test=False):
-    
 #     brax_envs.register_environment(env_name, Rodent)
-
 #     env = BraxWrapper(brax_envs.get_environment(env_name), 
 #                       iterations=6,
 #                       ls_iterations=3)
-    
 #     env.set_seed(0)
-
 #     env = TransformedEnv(env)
 #     return env
 
 def make_env(env_name, device="cpu"):
      # env_name not in use now, can be use later
 
-    env = RodentRunEnv()
+    env = RodentRunEnv(device=device)
     env._set_seed(0)
     env = TransformedEnv(env)
     env.append_transform(RewardSum())
@@ -72,17 +68,17 @@ def make_env(env_name, device="cpu"):
     return env
 
 
-def make_parallel_env(env_name, num_envs, device, is_test=False):
-    env = ParallelEnv(
-        num_envs,
-        EnvCreator(lambda: make_env(env_name)),
-        serial_for_single=True,
-        device=device,
-    )
-    env = TransformedEnv(env)
-    env.append_transform(VecNorm(in_keys=["observation"]))
-    env.append_transform(RewardSum())
-    return env
+# def make_parallel_env(env_name, num_envs, device, is_test=False):
+#     env = ParallelEnv(
+#         num_envs,
+#         EnvCreator(lambda: make_env(env_name)),
+#         serial_for_single=True,
+#         device=device,
+#     )
+#     env = TransformedEnv(env)
+#     env.append_transform(VecNorm(in_keys=["observation"]))
+#     env.append_transform(RewardSum())
+#     return env
 
 
 # ====================================================================
@@ -185,7 +181,7 @@ def make_ppo_modules_pixels(proof_environment):
 
 def make_ppo_models(env_name):
 
-    proof_environment = make_parallel_env(env_name, num_envs=1, device="cpu")
+    proof_environment = make_env(env_name,device="cpu")
     common_module, policy_module, value_module = make_ppo_modules_pixels(
         proof_environment
     )
