@@ -88,8 +88,7 @@ def make_ppo_models_state(proof_environment):
     # Define shared net as TensorDictModule
     common_module = TensorDictModule(
         module=torch.nn.Sequential(#common_cnn,
-                                   common_mlp,
-                                   ),
+                                   common_mlp),
         in_keys=in_keys,
         out_keys=["common_features"],
     )
@@ -168,11 +167,6 @@ def make_ppo_models():
         value_operator=value_module,
     )
 
-    with torch.no_grad():
-        td = proof_environment.rollout(max_steps=100, break_when_any_done=False)
-        td = actor_critic(td)
-        del td
-
     actor = actor_critic.get_policy_operator()
     critic = actor_critic.get_value_operator()
 
@@ -200,6 +194,8 @@ def eval_model(actor, test_env, num_episodes=3):
         test_rewards.append(reward.cpu())
     del td_test
     return torch.cat(test_rewards, 0)
+
+
 
 def render_rollout(actor, env, steps, camera="side"):
     rollout = env.rollout(
