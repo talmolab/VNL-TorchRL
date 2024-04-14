@@ -75,7 +75,7 @@ def make_ppo_models_state(proof_environment):
     
     # common_cnn_output = common_cnn(torch.ones(input_shape))
 
-    # Define policy architecture
+    # Define policy architecture first, not passing in
     policy_mlp = MLP(
         in_features=input_shape[-1],
         activation_class=torch.nn.Tanh,
@@ -89,7 +89,7 @@ def make_ppo_models_state(proof_environment):
             torch.nn.init.orthogonal_(layer.weight, 1.0)
             layer.bias.data.zero_()
 
-    # Add state-independent normal scale, cover TanhNormal
+    # Add state-independent normal scale, cover TanhNormal function
     policy_mlp = torch.nn.Sequential(
         policy_mlp,
         AddStateIndependentNormalScale(
@@ -97,7 +97,7 @@ def make_ppo_models_state(proof_environment):
         ),
     )
 
-    # Add probabilistic sampling of the actions
+    # Add probabilistic sampling of the actions & actually pass in now
     policy_module = ProbabilisticActor(
         TensorDictModule(
             module=policy_mlp,
@@ -136,7 +136,7 @@ def make_ppo_models_state(proof_environment):
 
 
 def make_ppo_models():
-    '''keep this one simple'''
+    '''keep this one simple, no common module needed'''
 
     proof_environment = make_env(batch_size=[1], worker_threads=1, device="cpu")
     actor, critic = make_ppo_models_state(proof_environment)
@@ -146,7 +146,6 @@ def make_ppo_models():
 # ====================================================================
 # Evaluation utils
 # --------------------------------------------------------------------
-
 
 def eval_model(actor, test_env, num_episodes=3):
     test_rewards = []
@@ -162,6 +161,8 @@ def eval_model(actor, test_env, num_episodes=3):
         test_rewards.append(reward.cpu())
     del td_test
     return torch.cat(test_rewards, 0)
+
+
 
 def render_rollout(actor, env, steps, camera="side"):
     rollout = env.rollout(
