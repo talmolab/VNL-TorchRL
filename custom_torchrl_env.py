@@ -124,6 +124,7 @@ class RodentRunEnv(CustomMujocoEnvBase):
                     dtype=torch.float32
                 ),
                 shape=self.batch_size
+                
             ),
             shape=self.batch_size
         )

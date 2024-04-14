@@ -18,7 +18,14 @@ from torchrl.envs import (
     VecNorm,
 )
 from custom_torchrl_env import RodentRunEnv
-from torchrl.modules import MLP, ProbabilisticActor, TanhNormal, ValueOperator
+from torchrl.modules import (
+    MLP,
+    ProbabilisticActor,
+    TanhNormal,
+    ValueOperator,
+    ActorValueOperator,
+    ConvNet
+    )
 
 import mujoco
 import moviepy.editor
@@ -59,9 +66,36 @@ def make_ppo_models_state(proof_environment):
         "tanh_loc": False,
     }
 
+    in_keys = ["observation"]
+    # common_cnn = ConvNet(
+    #     activation_class=torch.nn.ReLU,
+    #     num_cells=[32, 64, 64],
+    #     kernel_sizes=[8, 4, 3],
+    #     strides=[4, 2, 1],
+    # )
+    # common_cnn_output = common_cnn(torch.ones(input_shape))
+    
+    common_mlp = MLP(
+        in_features=input_shape[-1], #common_cnn_output.shape[-1],
+        activation_class=torch.nn.ReLU,
+        activate_last_layer=True,
+        out_features=512,
+        num_cells=[],
+    )
+    common_mlp_output = common_mlp(torch.ones(input_shape))#(common_cnn_output)
+
+    # Define shared net as TensorDictModule
+    common_module = TensorDictModule(
+        module=torch.nn.Sequential(#common_cnn,
+                                   common_mlp,
+                                   ),
+        in_keys=in_keys,
+        out_keys=["common_features"],
+    )
+
     # Define policy architecture
     policy_mlp = MLP(
-        in_features=input_shape[-1],
+        in_features=common_mlp_output.shape[-1],
         activation_class=torch.nn.Tanh,
         out_features=num_outputs,  # predict only loc
         num_cells=[64, 64],
@@ -85,7 +119,7 @@ def make_ppo_models_state(proof_environment):
     policy_module = ProbabilisticActor(
         TensorDictModule(
             module=policy_mlp,
-            in_keys=["observation"],
+            in_keys=["common_features"],
             out_keys=["loc", "scale"],
         ),
         in_keys=["loc", "scale"],
@@ -113,15 +147,35 @@ def make_ppo_models_state(proof_environment):
     # Define value module
     value_module = ValueOperator(
         value_mlp,
-        in_keys=["observation"],
+        in_keys=["common_features"],
     )
 
-    return policy_module, value_module
+    return common_module, policy_module, value_module
 
 
 def make_ppo_models():
     proof_environment = make_env(batch_size=[1], worker_threads=1, device="cpu")
     actor, critic = make_ppo_models_state(proof_environment)
+
+    common_module, policy_module, value_module = make_ppo_models_state(proof_environment)
+
+    # Wrap modules in a single ActorCritic operator
+    actor_critic = ActorValueOperator(
+        common_operator=common_module,
+        policy_operator=policy_module,
+        value_operator=value_module,
+    )
+
+    with torch.no_grad():
+        td = proof_environment.rollout(max_steps=100, break_when_any_done=False)
+        td = actor_critic(td)
+        del td
+
+    actor = actor_critic.get_policy_operator()
+    critic = actor_critic.get_value_operator()
+
+    del proof_environment
+
     return actor, critic
 
 
