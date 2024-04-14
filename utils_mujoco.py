@@ -155,9 +155,7 @@ def make_ppo_models_state(proof_environment):
 
 def make_ppo_models():
     proof_environment = make_env(batch_size=[1], worker_threads=1, device="cpu")
-    actor, critic = make_ppo_models_state(proof_environment)
-
-    common_module, policy_module, value_module = make_ppo_models_state(proof_environment)
+    common_module, actor, critic = make_ppo_models_state(proof_environment)
 
     # Wrap modules in a single ActorCritic operator
     actor_critic = ActorValueOperator(
