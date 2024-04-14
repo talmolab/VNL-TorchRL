@@ -30,7 +30,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
     from torchrl.record.loggers import generate_exp_name, get_logger
     from utils_mujoco import eval_model, make_env, make_ppo_models, render_rollout
 
-    device = "cpu" if not torch.cuda.device_count() else "cuda"
+    device = "cpu" #if not torch.cuda.device_count() else "cuda"
     num_mini_batches = cfg.collector.frames_per_batch * cfg.env.batch_size // cfg.loss.mini_batch_size
     total_network_updates = (
         (cfg.collector.total_frames // cfg.collector.frames_per_batch)

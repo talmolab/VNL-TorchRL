@@ -1,6 +1,7 @@
 # task and env
 env:
   env_name: Rodent
+  batch_size: 2_048
   
 # collector
 collector:
