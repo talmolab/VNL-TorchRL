@@ -39,6 +39,7 @@ from torchrl.modules import (
 
 from torchrl.envs import BraxWrapper
 import brax.envs as brax_envs
+from custom_torchrl_env import RodentRunEnv
 
 from Rodent_Env_Brax import Rodent
 # ====================================================================
@@ -46,16 +47,24 @@ from Rodent_Env_Brax import Rodent
 # --------------------------------------------------------------------
 
 
-def make_env(env_name="rodent", frame_skip=4, is_test=False):
+# def make_env(env_name="rodent", frame_skip=4, is_test=False):
     
-    brax_envs.register_environment(env_name, Rodent)
+#     brax_envs.register_environment(env_name, Rodent)
 
-    env = BraxWrapper(brax_envs.get_environment(env_name), 
-                      iterations=6,
-                      ls_iterations=3)
+#     env = BraxWrapper(brax_envs.get_environment(env_name), 
+#                       iterations=6,
+#                       ls_iterations=3)
     
+#     env.set_seed(0)
+
+#     env = TransformedEnv(env)
+#     return env
+
+def make_env(batch_size, worker_threads, device="cpu"):
+    env = RodentRunEnv(batch_size=batch_size, 
+                       worker_thread_count=worker_threads,
+                       device=device)
     env.set_seed(0)
-
     env = TransformedEnv(env)
     return env
 
