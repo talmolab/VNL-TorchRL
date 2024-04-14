@@ -94,7 +94,7 @@ class CustomMujocoEnvDummy(CustomMujocoEnvBase):
     
 class RodentRunEnv(CustomMujocoEnvBase):
 
-    def __init__(self, seed=None, batch_size=[30], device="cpu", worker_thread_count = os.cpu_count()):
+    def __init__(self, seed=None, batch_size=[1], device="cpu", worker_thread_count = os.cpu_count()):
         
         _XML_PATH = "models/rodent_optimized.xml"
 
@@ -136,7 +136,7 @@ class RodentRunEnv(CustomMujocoEnvBase):
         print(self.batch_size.numel())
 
         com_before = torch.from_numpy(np.array(self.simulation_pool.getSubtree_com())[:, 1, :]).to(self.device).reshape(self.batch_size + (3,))
-        self.simulation_pool.setControl(np.clip(action.cpu().numpy().reshape(self.batch_size.numel(), control_size), -1, 1))
+        self.simulation_pool.setControl(np.clip(action.cpu().numpy().reshape(2* self.batch_size.numel(), control_size), -1, 1))
         self.simulation_pool.multistep(5)
         #self.simulation_pool.step()
         com_after = torch.from_numpy(np.array(self.simulation_pool.getSubtree_com())[:, 1, :]).to(self.device).reshape(self.batch_size + (3,))
