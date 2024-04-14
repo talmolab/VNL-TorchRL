@@ -109,12 +109,12 @@ def make_ppo_models_state(proof_environment):
             layer.bias.data.zero_()
 
     # Add state-independent normal scale
-    # policy_mlp = torch.nn.Sequential(
-    #     policy_mlp,
-    #     AddStateIndependentNormalScale(
-    #         proof_environment.action_spec.shape[-1], scale_lb=1e-8
-    #     ),
-    # )
+    policy_mlp = torch.nn.Sequential(
+        policy_mlp,
+        AddStateIndependentNormalScale(
+            proof_environment.action_spec.shape[-1], scale_lb=1e-8
+        ),
+    )
 
     policy_net = torch.nn.Sequential(policy_mlp,
                                      NormalParamExtractor(),)
@@ -168,10 +168,10 @@ def make_ppo_models():
         value_operator=value_module,
     )
 
-    with torch.no_grad():
-        td = proof_environment.rollout(max_steps=100, break_when_any_done=False)
-        td = actor_critic(td)
-        del td
+    # with torch.no_grad():
+    #     td = proof_environment.rollout(max_steps=100, break_when_any_done=False)
+    #     td = actor_critic(td)
+    #     del td
 
     actor = actor_critic.get_policy_operator()
     critic = actor_critic.get_value_operator()
