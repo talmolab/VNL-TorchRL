@@ -136,7 +136,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
 
     # Main training loop
     for i, data in enumerate(collector):
-        print(data)
+        print(data.observation)
         # for each data in the collector
 
         log_info = {}
