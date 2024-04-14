@@ -60,6 +60,7 @@ def make_ppo_models_state(proof_environment):
 
     # Define policy output distribution class
     num_outputs = 2 * proof_environment.action_spec.shape[-1]
+
     distribution_class = TanhNormal
     distribution_kwargs = {
         "min": proof_environment.action_spec.space.low,
@@ -167,10 +168,10 @@ def make_ppo_models():
         value_operator=value_module,
     )
 
-    # with torch.no_grad():
-    #     td = proof_environment.rollout(max_steps=100, break_when_any_done=False)
-    #     td = actor_critic(td)
-    #     del td
+    with torch.no_grad():
+        td = proof_environment.rollout(max_steps=100, break_when_any_done=False)
+        td = actor_critic(td)
+        del td
 
     actor = actor_critic.get_policy_operator()
     critic = actor_critic.get_value_operator()
