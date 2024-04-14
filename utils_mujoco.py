@@ -59,7 +59,7 @@ def make_ppo_models_state(proof_environment):
     input_shape = proof_environment.observation_spec["observation"].shape
 
     # Define policy output distribution class
-    num_outputs = proof_environment.action_spec.shape[-1]
+    num_outputs = 2 * proof_environment.action_spec.shape[-1]
     distribution_class = TanhNormal
     distribution_kwargs = {
         "min": proof_environment.action_spec.space.low,
@@ -108,20 +108,20 @@ def make_ppo_models_state(proof_environment):
             layer.bias.data.zero_()
 
     # Add state-independent normal scale
-    policy_mlp = torch.nn.Sequential(
-        policy_mlp,
-        AddStateIndependentNormalScale(
-            proof_environment.action_spec.shape[-1], scale_lb=1e-8
-        ),
-    )
+    # policy_mlp = torch.nn.Sequential(
+    #     policy_mlp,
+    #     AddStateIndependentNormalScale(
+    #         proof_environment.action_spec.shape[-1], scale_lb=1e-8
+    #     ),
+    # )
 
-    # policy_net = torch.nn.Sequential(policy_mlp,
-    #                                  NormalParamExtractor(),)
+    policy_net = torch.nn.Sequential(policy_mlp,
+                                     NormalParamExtractor(),)
 
     # Add probabilistic sampling of the actions
     policy_module = ProbabilisticActor(
         TensorDictModule(
-            module=policy_mlp,
+            module=policy_net,
             in_keys=["common_features"],
             out_keys=["loc", "scale"],
         ),
