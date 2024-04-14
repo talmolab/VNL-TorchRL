@@ -69,10 +69,10 @@ def make_env(batch_size, worker_threads, device="cpu"):
     return env
 
 
-def make_parallel_env(env_name, num_envs, device, is_test=False):
+def make_parallel_env(batch_size, worker_threads, num_envs, device, is_test=False):
     env = ParallelEnv(
         num_envs,
-        EnvCreator(lambda: make_env(env_name)),
+        EnvCreator(lambda: make_env(batch_size=batch_size, worker_threads=worker_threads)),
         serial_for_single=True,
         device=device,
     )
@@ -181,8 +181,9 @@ def make_ppo_modules_pixels(proof_environment):
 
 
 def make_ppo_models(env_name):
+    # env_name not in use now, can be use later
 
-    proof_environment = make_parallel_env(env_name, 1, device="cpu")
+    proof_environment = make_parallel_env(batch_size=[1], worker_threads=1, num_envs=1, device="cpu")
     common_module, policy_module, value_module = make_ppo_modules_pixels(
         proof_environment
     )
