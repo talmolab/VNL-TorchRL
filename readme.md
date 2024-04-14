@@ -1,5 +1,5 @@
 # VNL-TorchRL with CPU Mujoco
-The CPU Mujoco Version VNL implementation with TorchRL as the deep learning backend
+The CPU Mujoco VNL implementation with TorchRL as the deep learning backend and adapting dm_control for mjcf arena setting. ***currently pushing from PPO to adapt to imitation learning.***
 
 ## Instruction for our modified CPU Mujoco
 1. Building Mujoco from source (https://mujoco.readthedocs.io/en/stable/programming/index.html)
