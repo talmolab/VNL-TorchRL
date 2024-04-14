@@ -136,7 +136,7 @@ def main(cfg: "DictConfig"):  # noqa: F821
 
     # Main training loop
     for i, data in enumerate(collector):
-        print(data['observation'])
+        # print(data['observation'])
         # for each data in the collector
 
         log_info = {}
@@ -194,6 +194,8 @@ def main(cfg: "DictConfig"):  # noqa: F821
                 losses[j, k] = loss.select("loss_critic", "loss_entropy", "loss_objective").detach()
                 critic_loss = loss["loss_critic"]
                 actor_loss = loss["loss_objective"] + loss["loss_entropy"]
+
+                print(loss)
 
                 # Backward pass, update in the direction of gradient
                 actor_loss.backward()
