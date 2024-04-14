@@ -89,6 +89,9 @@ class CustomMujocoEnvDummy(CustomMujocoEnvBase):
     def _getDone(self):
         return torch.zeros(self.batch_size + (1,), dtype=torch.bool, device=self.device)
 
+    
+    
+    
 class RodentRunEnv(CustomMujocoEnvBase):
 
     def __init__(self, seed=None, batch_size=[1], device="cpu", worker_thread_count = os.cpu_count()):
