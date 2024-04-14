@@ -16,6 +16,7 @@ logger:
   exp_name: Mujoco_CPU
   test_interval: 1_000_000
   num_test_episodes: 5
+  eval_video_length: 2048
 
 # Optim
 optim:
@@ -26,8 +27,8 @@ optim:
 # loss
 loss:
   gamma: 0.99
-  mini_batch_size: 64
-  ppo_epochs: 10
+  mini_batch_size: 512
+  ppo_epochs: 32
   gae_lambda: 0.95
   clip_epsilon: 0.2
   anneal_clip_epsilon: False
