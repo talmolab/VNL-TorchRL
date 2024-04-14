@@ -163,8 +163,7 @@ def eval_model(actor, test_env, num_episodes=3):
     return torch.cat(test_rewards, 0)
 
 
-
-def render_rollout(actor, env, steps, camera=3):
+def render_rollout(actor, env, steps, camera=2): # dm control calling camera
     rollout = env.rollout(
             policy=actor,
             auto_reset=True,
