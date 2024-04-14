@@ -157,7 +157,7 @@ def make_ppo_modules_pixels(proof_environment):
     policy_module = ProbabilisticActor(
         policy_module,
         in_keys=["loc", "scale"],
-        spec=proof_environment.action_spec,#CompositeSpec(action=proof_environment.action_spec),
+        spec=CompositeSpec(action=proof_environment.action_spec),
         distribution_class=distribution_class,
         distribution_kwargs=distribution_kwargs,
         return_log_prob=True,
