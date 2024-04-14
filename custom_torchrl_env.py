@@ -6,6 +6,11 @@ import torchrl.data
 from tensordict import TensorDict
 import hydra.utils
 
+from dm_control import mjcf as mjcf_dm
+from dm_control.composer.variation import distributions
+from arena import Task_Vnl, Gap_Vnl
+import rodent_base as rodent_base
+
 import mujoco
 #This package is in a fork of MuJoCo: https://github.com/emiwar/mujoco/tree/feature/simulation_pool
 #Build and install according to 
@@ -91,16 +96,35 @@ class CustomMujocoEnvDummy(CustomMujocoEnvBase):
         return torch.zeros(self.batch_size + (1,), dtype=torch.bool, device=self.device)
 
     
-    
-    
 class RodentRunEnv(CustomMujocoEnvBase):
 
     def __init__(self, seed=None, batch_size=[1], device="cpu", worker_thread_count = os.cpu_count()):
         
-        _XML_PATH = "models/rodent_with_floor.xml" #"models/rodent_optimized.xml"
+        # _XML_PATH = "models/rodent_with_floor.xml" #"models/rodent_optimized.xml"
 
-        filepath = hydra.utils.to_absolute_path(_XML_PATH) # direct to VNL folder
-        mj_model = mujoco.MjModel.from_xml_path(filepath)
+        # filepath = hydra.utils.to_absolute_path(_XML_PATH) # direct to VNL folder
+        # mj_model = mujoco.MjModel.from_xml_path(filepath)
+
+        arena = Gap_Vnl(platform_length=distributions.Uniform(1.5, 2.0),
+                        gap_length=distributions.Uniform(.1, .35),
+                        corridor_width=10,
+                        corridor_length=100,
+                        aesthetic='outdoor_natural',
+                        visible_side_planes=False)
+        arena.regenerate(random_state=None)
+        
+        walker = rodent_base.Rat(observable_options={'egocentric_camera': dict(enabled=True)})
+        task = Task_Vnl(
+            walker=walker,
+            arena=arena,
+            walker_spawn_position=(1, 0, 0))
+
+        # Export from dm_control
+        random_state = np.random.RandomState(12345)
+        task.initialize_episode_mjcf(random_state)
+        physics = mjcf_dm.Physics.from_mjcf_model(task.root_entity.mjcf_model)
+
+        mj_model = physics
         super().__init__(mj_model=mj_model, seed=seed,
                          batch_size=batch_size, device=device,
                          worker_thread_count=worker_thread_count)
