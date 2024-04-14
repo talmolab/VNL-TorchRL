@@ -63,7 +63,7 @@ from Rodent_Env_Brax import Rodent
 def make_env(env_name, device="cpu"):
      # env_name not in use now, can be use later
 
-    env = RodentRunEnv(device=device)
+    env = RodentRunEnv()
     env._set_seed(0)
     env = TransformedEnv(env)
     env.append_transform(RewardSum())

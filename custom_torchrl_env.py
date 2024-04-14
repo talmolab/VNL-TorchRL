@@ -96,7 +96,7 @@ class RodentRunEnv(CustomMujocoEnvBase):
 
     def __init__(self, seed=None, batch_size=[1], device="cpu", worker_thread_count = os.cpu_count()):
         
-        _XML_PATH = "models/rodent_optimized.xml"
+        _XML_PATH = "models/rodent_with_floor.xml" #"models/rodent_optimized.xml"
 
         filepath = hydra.utils.to_absolute_path(_XML_PATH) # direct to VNL folder
         mj_model = mujoco.MjModel.from_xml_path(filepath)
