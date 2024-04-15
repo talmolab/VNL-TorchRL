@@ -163,7 +163,7 @@ def eval_model(actor, test_env, num_episodes=3):
     return torch.cat(test_rewards, 0)
 
 
-def render_rollout(actor, env, steps, camera="side"): # dm control calling camera
+def render_rollout(actor, env, steps, camera=0): # dm control calling camera
     rollout = env.rollout(
             policy=actor,
             auto_reset=True,
@@ -183,7 +183,7 @@ def render_rollout(actor, env, steps, camera="side"): # dm control calling camer
             state = rollout["observation"][env_id, t].cpu().numpy().astype(np.float64)
             mujoco.mj_setState(model, data, state, mujoco.mjtState.mjSTATE_FULLPHYSICS)
             mujoco.mj_forward(model, data)
-            rend.update_scene(data)
+            rend.update_scene(data, camera=camera)
             all_imgs.append(rend.render())
     clip = moviepy.editor.ImageSequenceClip(list(all_imgs), fps=50)
     clip.write_videofile("/tmp/rendered_video.mp4", fps=50)
