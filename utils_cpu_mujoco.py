@@ -184,7 +184,7 @@ def render_rollout(actor, env, steps, camera="side"): # dm control calling camer
             mujoco.mj_setState(model, data, state, mujoco.mjtState.mjSTATE_FULLPHYSICS)
             mujoco.mj_forward(model, data)
             rend.update_scene(data)
-            all_imgs.append(rend.render(offscreen=True))
+            all_imgs.append(rend.render())
     clip = moviepy.editor.ImageSequenceClip(list(all_imgs), fps=50)
     clip.write_videofile("/tmp/rendered_video.mp4", fps=50)
     return "/tmp/rendered_video.mp4"
