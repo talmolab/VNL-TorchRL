@@ -171,7 +171,7 @@ def render_rollout(actor, env, steps, camera="side"): # dm control calling camer
             break_when_any_done=False,
             max_steps=steps,
         )
-    model = env._mj_model
+    model = env.physics#_mj_model
     data = mujoco.MjData(model)
     mujoco.mj_resetData(model, data)
     model.vis.global_.offheight = 240*2
