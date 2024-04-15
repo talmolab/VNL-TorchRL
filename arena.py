@@ -31,7 +31,10 @@ class Task_Vnl(corr_tasks.RunThroughCorridor):
                walker_spawn_position):
         
         # we don't really need the rest of the reward setup in dm_control, just how the walker is attached to the arena
-        spawn_site =  arena._mjcf_root.worldbody.add('site', pos = walker_spawn_position)
+        spawn_site =  arena._mjcf_root.worldbody.add('site',
+                                                     pos = walker_spawn_position)
         self._arena = arena
         self._walker = walker
-        self._walker.create_root_joints(self._arena.attach(self._walker, attach_site=spawn_site)) # customize starting environment
+        self._walker.create_root_joints(
+            self._arena.attach(self._walker,
+                               attach_site=spawn_site)) # customize starting environment
