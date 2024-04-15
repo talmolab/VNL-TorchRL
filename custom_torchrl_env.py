@@ -165,11 +165,11 @@ class RodentRunEnv(CustomMujocoEnvBase):
         
         #print(self.batch_size.numel())
 
-        com_before = torch.from_numpy(np.array(self.simulation_pool.getSubtree_com())[:, 2, :]).to(self.device).reshape(self.batch_size + (3,))
+        com_before = torch.from_numpy(np.array(self.simulation_pool.getSubtree_com())[:, 3, :]).to(self.device).reshape(self.batch_size + (3,))
         self.simulation_pool.setControl(np.clip(action.cpu().numpy().reshape(self.batch_size.numel(), control_size), -1, 1))
         self.simulation_pool.multistep(5)
         #self.simulation_pool.step()
-        com_after = torch.from_numpy(np.array(self.simulation_pool.getSubtree_com())[:, 2, :]).to(self.device).reshape(self.batch_size + (3,))
+        com_after = torch.from_numpy(np.array(self.simulation_pool.getSubtree_com())[:, 3, :]).to(self.device).reshape(self.batch_size + (3,))
         
         # Calculate reward
         velocity = (com_after - com_before) /  self._mj_model.opt.timestep
@@ -191,7 +191,7 @@ class RodentRunEnv(CustomMujocoEnvBase):
         
     def _reset(self, tensordict=None):
         out = super()._reset(tensordict)
-        com = torch.from_numpy(np.array(self.simulation_pool.getSubtree_com())[:, 2, :]).to(self.device, dtype=torch.float32).reshape(self.batch_size + (3,))
+        com = torch.from_numpy(np.array(self.simulation_pool.getSubtree_com())[:, 3, :]).to(self.device, dtype=torch.float32).reshape(self.batch_size + (3,))
         velocity = torch.zeros(self.batch_size + (3,), dtype=torch.float32, device=self.device)
         out["info"] = TensorDict({"center_of_mass": com, "velocity": velocity}, batch_size=self.batch_size)
         #out["center_of_mass"] = com
