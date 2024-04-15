@@ -164,6 +164,8 @@ def eval_model(actor, test_env, num_episodes=3):
 
 
 def render_rollout(actor, env, steps, camera="side"): # dm control calling camera
+    from dm_control.mujoco.engine import Camera
+
     rollout = env.rollout(
             policy=actor,
             auto_reset=True,
@@ -171,14 +173,15 @@ def render_rollout(actor, env, steps, camera="side"): # dm control calling camer
             break_when_any_done=False,
             max_steps=steps,
         )
-    model = env.physics#_mj_model
+    model = env._mj_model
     data = mujoco.MjData(model)
     mujoco.mj_resetData(model, data)
     model.vis.global_.offheight = 240*2
     model.vis.global_.offwidth = 320*2
     env_id = 0
     all_imgs = []
-    with mujoco.Renderer(model, 240*2, 320*2) as rend:
+    
+    with Camera(model, camera_id=camera) as rend: #mujoco.Renderer(model, 240*2, 320*2) as rend:
         for t in range(steps):
             state = rollout["observation"][env_id, t].cpu().numpy().astype(np.float64)
             mujoco.mj_setState(model, data, state, mujoco.mjtState.mjSTATE_FULLPHYSICS)
