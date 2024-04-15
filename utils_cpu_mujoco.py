@@ -164,8 +164,6 @@ def eval_model(actor, test_env, num_episodes=3):
 
 
 def render_rollout(actor, env, steps, camera="side"): # dm control calling camera
-    from dm_control.mujoco.engine import Camera
-
     rollout = env.rollout(
             policy=actor,
             auto_reset=True,
@@ -180,14 +178,13 @@ def render_rollout(actor, env, steps, camera="side"): # dm control calling camer
     model.vis.global_.offwidth = 320*2
     env_id = 0
     all_imgs = []
-    
-    with Camera(model, camera_id=camera) as rend: #mujoco.Renderer(model, 240*2, 320*2) as rend:
+    with mujoco.Renderer(model, 240*2, 320*2) as rend:
         for t in range(steps):
             state = rollout["observation"][env_id, t].cpu().numpy().astype(np.float64)
             mujoco.mj_setState(model, data, state, mujoco.mjtState.mjSTATE_FULLPHYSICS)
             mujoco.mj_forward(model, data)
-            rend.update_scene(data, camera=camera)
-            all_imgs.append(rend.render())
+            rend.update_scene(data)
+            all_imgs.append(rend.render(offscreen=True))
     clip = moviepy.editor.ImageSequenceClip(list(all_imgs), fps=50)
     clip.write_videofile("/tmp/rendered_video.mp4", fps=50)
     return "/tmp/rendered_video.mp4"
