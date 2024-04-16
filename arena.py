@@ -20,18 +20,17 @@ class Gap_Vnl(corr_arenas.GapsCorridor):
                        platform_length = platform_length,
                        gap_length = gap_length)
         
-        self._top_camera = self._mjcf_root.worldbody.add('camera',
+        self._camera = self._mjcf_root.worldbody.add('camera',
                                                          name='side_camera',
                                                          mode="trackcom",
                                                          pos=[-1, 0, 1.5],
-                                                         xyaxes=[0, -1, 0, 1, 0, 2],
-                                                         trackbody='torso')
+                                                         xyaxes=[0, -1, 0, 1, 0, 2])
     
     def regenerate(self, random_state):
         super().regenerate(random_state)
     
-    def top_camera(self):
-        return self._top_camera
+    def camera(self):
+        return self._camera
 
 # Task now just serve as a wrapper
 class Task_Vnl(corr_tasks.RunThroughCorridor):
