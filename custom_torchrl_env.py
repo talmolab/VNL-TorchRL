@@ -106,23 +106,22 @@ class RodentRunEnv(CustomMujocoEnvBase):
         # mj_model = mujoco.MjModel.from_xml_path(filepath)
 
         # connect to dm_control
-        arena = Gap_Vnl(platform_length=distributions.Uniform(0.5, 1.0),
-                        gap_length=distributions.Uniform(.01, .1),
-                        corridor_width=5,
-                        corridor_length=20,
+        arena = Gap_Vnl(platform_length=distributions.Uniform(0.3, 0.8),
+                        gap_length=distributions.Uniform(.05, .1),
+                        corridor_width=2,
+                        corridor_length=5,
                         aesthetic='outdoor_natural',
                         visible_side_planes=False)
         arena.regenerate(random_state=None)
         
         walker = rodent_base.Rat(observable_options={'egocentric_camera': dict(enabled=True)})
-        task = Task_Vnl(
-            walker=walker,
-            arena=arena,
-            walker_spawn_position=(1, 0, 0))
+        
+        task = Task_Vnl(walker=walker,
+                        arena=arena,
+                        walker_spawn_position=(1, 0, 0))
 
         # Export from dm_control
-        random_state = np.random.RandomState(12345)
-        task.initialize_episode_mjcf(random_state)
+        task.initialize_episode_mjcf(np.random.RandomState(100))
         physics = mjcf_dm.Physics.from_mjcf_model(task.root_entity.mjcf_model)
 
         mj_model = physics.model.ptr
@@ -130,10 +129,12 @@ class RodentRunEnv(CustomMujocoEnvBase):
                          batch_size=batch_size, device=device,
                          worker_thread_count=worker_thread_count)
         
-        self._forward_reward_weight = 10
+        self._forward_reward_weight = 5
         self._ctrl_cost_weight = 0.1
         self._healthy_reward = 1.0
         self._min_z = 0.035
+        self.distance_weight = 10
+        
         state_size = mujoco.mj_stateSize(self._mj_model, mujoco.mjtState.mjSTATE_FULLPHYSICS)
         self.observation_spec = torchrl.data.CompositeSpec(
             observation = torchrl.data.UnboundedContinuousTensorSpec(
@@ -175,7 +176,9 @@ class RodentRunEnv(CustomMujocoEnvBase):
         velocity = (com_after - com_before) /  self._mj_model.opt.timestep
         forward_reward = self._forward_reward_weight * velocity[..., 0]
         ctrl_cost = self._ctrl_cost_weight * torch.square(action).sum(axis=-1)
-        reward = (forward_reward + self._healthy_reward - ctrl_cost).to(dtype=torch.float32)
+        distance_from_origin= self.distance_weight * np.linalg.norm(com_after)
+        
+        reward = (distance_from_origin + forward_reward + self._healthy_reward - ctrl_cost).to(dtype=torch.float32)
         done = com_after[..., 2] < self._min_z
         
         out = TensorDict({
