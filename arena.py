@@ -22,7 +22,7 @@ class Gap_Vnl(corr_arenas.GapsCorridor):
         
         self._camera = self._mjcf_root.worldbody.add('camera',
                                                          name='side_camera',
-                                                         mode="trackcom",
+                                                         mode="targetbody",
                                                          pos=[-1, 0, 1.5],
                                                          xyaxes=[0, -1, 0, 1, 0, 2])
     
